@@ -1,10 +1,14 @@
 //============================================================================
 // Name        : cwrapper.cpp
-// Author      : 
-// Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
+// Author      : Michael Bilenko denso.FFFF@gmail.com
+// Version     : 0.1beta
+// Copyright   :
+// Description : wrapper for windows ccs picc compiler. Using wine under linux
 //============================================================================
+
+// TODO: add config file
+// TODO: add windows suport (for use compiler vith MPLABX IDE under windows)
+// TODO: do code cleanup
 
 #include <iostream>
 #include <fstream>
@@ -19,7 +23,7 @@
 
 using namespace std;
 
-class CWrapper {
+class CWrapper {  // main system class
 
 	string path;
 	string wineexe,ccspath;
@@ -57,7 +61,7 @@ class CWrapper {
 		return 1;
 	}
 
-	void cleanup(string base) {
+	void cleanup(string base) { // cleanup whole crap left by compiler
 		vector <string> extensions;
 		extensions.push_back(".err");
 		extensions.push_back(".cod");
@@ -78,6 +82,8 @@ class CWrapper {
 public:
 	CWrapper() {
 
+
+		// default directories
 		sh = "/bin/sh";
 		wineexe = "/usr/bin/wine";
 		ccspath = "/home/hbill/.wine/drive_c/PICC/Ccsc.exe";
@@ -85,20 +91,13 @@ public:
 
 
 
-
-
-		// try disable stdio,stderr
-
-//		int f;
-	//	f = open ("/dev/null",O_RDWR);
-		//dup(f);dup(f);dup(f);
-
 	}
+
 	int run(int n,char ** params){
 		int r;
 
 		char e=0;
-		if (!fileExists(sh)) {
+		if (!fileExists(sh)) { // check files for existence
 			e=1;
 			cout << "Error: cannot find shell\n"<<endl;
 		};
@@ -107,15 +106,15 @@ public:
 
 		if (e) return -1;
 
-		if (n < 2) {
+		if (n < 2) { // if no params pring usage
 			cout << "Usage cwrapper [params] source.c"<<endl;
 			return -1;
 		}
 
-
+		// get compile filename
 		string tmp(params[n-1]);  // assign filename parameter
 
-		int param_count = n - 2;
+		int param_count = n - 2; // read command line paramters
 		string parameters ("");
 		//cout << "Parameter count "<< param_count <<endl;
 		for (int i=1;i<=param_count;i++) {
@@ -131,16 +130,18 @@ public:
 			cout << "Error: Source file " << tmp << " Does not exist!" << endl;
 			return -1;
 		}
+		//compile path
 		path = path + " I=\"c:\\picc\\Devices\" " + parameters + tmp + " 2> /dev/null";
 		cout << "Invoked: "<<path<<endl;
+
+		// check filename for correctness
 		if (tmp.length()<3) {
 			cout <<"Error: Wrong filename!" << tmp <<endl;
 		}
-		tmp.resize(tmp.length()-2);
-		cleanup(tmp);
-//		cout << "File base " << tmp << endl;
+		tmp.resize(tmp.length()-2); // remove .c suffix
+		cleanup(tmp); // clean crap
 
-		//cout << path << endl;
+		// let's fork-exec
 		int pid = fork();
 		if (pid==0) {
 			r = execl("/bin/sh","sh","-c",path.c_str(),NULL);
@@ -150,10 +151,10 @@ public:
 			}
 		};
 		int sta;
-		waitpid(-1,&sta,0);//waitpid(pid);
-
+		waitpid(-1,&sta,0);
 		string err;
-		err = tmp + ".err";
+
+		err = tmp + ".err"; // let's read errors and poo them into stdout
 		ifstream in;
 
 		in.open(err.c_str());
