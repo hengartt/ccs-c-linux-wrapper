@@ -1,0 +1,6 @@
+Wrapper for CCS C compiler(windows version) under linux
+quick and dirty wrapper
+
+usage: cwrapper [parameters] file.c
+
+for parameters see CCS C compiler help
